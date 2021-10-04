@@ -1,11 +1,70 @@
 import mongoose from "mongoose";
-
-const UsersSchema = new mongoose.Schema({
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
+const UserSchema = new mongoose.Schema({
     fullname: {type: String, required: true},
     email: {type: String, required: true},
     password: {type: String, },
     address: [{detail:{type: String}, for:{type: String}}],
     phoneNumber: [{type: Number}],
+},
+{
+    timestamps: true,
 });
 
-export const UserModal = mongoose.model("Users", UsersSchema);
+UserSchema.methods.generateJwtToken = function() {
+    return jwt.sign({user:this._id.toString() }, "Zomato App");
+}
+
+UserSchema.statics.findByEmailAndPhone = async ({ email, phoneNumber}) =>
+{
+    //check whether  email exist
+    const checkUserByEmail = await UserModel.findOne({email}); 
+    const checkUserByPhone = await UserModel.findOne({phoneNumber});
+
+
+        if (checkUserByEmail || checkUserByPhone) {
+            throw new Error("User Alredy Exist!");
+        }
+
+        return false;
+};
+
+UserSchema.pre("save", function(next) {
+    const user = this;
+
+    if (!user.isModified("password")) return next();
+    
+    //generate bcrypt saltbv
+    bcrypt.genSalt(8, (error, salt) => {
+        if (error) return next(error);
+
+        //hash the password
+        bcrypt.hash(user.password, salt, (error, hash) => {
+            if(error) return next(error);
+
+            //assigning hased password
+            user.password = hash;
+            return next();
+        });
+    });
+
+});
+
+UserSchema.statics.findByEmailAndPassword = async({email, password}) => {
+    const user = await UserModel.findOne({email});
+    if (!user) throw new Error("User does no exist!!!");
+
+    //compare Password
+    const doesPasswordMatch = await bcrypt.compare(password, user.password);
+
+    if(!doesPasswordMatch) throw new Error("Invalid password!!!");
+
+    return user;
+
+};
+
+
+
+export const UserModel = mongoose.model("Users", UserSchema);
+
