@@ -1,7 +1,8 @@
 import React from 'react';
-
+import Slider from "react-slick";
 //components
 import DeliveryCategory from "./DeliveryCategory"
+import { NextArrow, PrevArrow} from "../CarouselArrow";
  const DeliveryCarousel = () => {
     const categories = [
         {
@@ -39,7 +40,16 @@ import DeliveryCategory from "./DeliveryCategory"
             "https://b.zmtcdn.com/data/dish_photos/06a/af146087e76aed8c0baa90a84a6f206a.jpg",
           title: "Sagu",
         },
-      ]
+      ];
+      const settings = {
+        arrows: true,
+        infinite: true,
+        speed:500,
+        slidesToScroll:1,
+        slidesToShow:4,
+        nextArrow:<NextArrow/>,
+        prevArrow: <PrevArrow/>,
+      }
     return (
         <>
             <h1 className="text-xl mb-4 font-semibold">
@@ -51,7 +61,11 @@ import DeliveryCategory from "./DeliveryCategory"
                 ))}
             </div>
             <div className="hidden lg:block">
-
+                <Slider {...settings}>
+                {categories.map((food) => (
+                    <DeliveryCategory {...food}/>
+                ))}
+                </Slider>
             </div>
         </>
     )
